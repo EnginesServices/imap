@@ -15,8 +15,119 @@
         "level": "alpha",
         "patch": 0
       }
-    }
+    },
+    "software": {
+      "display": {
+        "title": "imap mail store",
+        "label": "imap"
+      }
+    },
+    "timestamp": "2017-11-16T14:14:13+11:00"
   },
   "software": {
+    "base": {
+      "name": "imap",
+      "publisher_namespace": "EnginesSystem",
+      "type_path": "imap",
+      "parent_image": "engines/servicebase",
+      "run_as_user": "dovecot",
+      "deployment_type": "worker",
+      "memory": {
+        "required": 194,
+        "recommended": 194
+      }
+    },
+    "ports": [
+      {
+        "port": 10143,
+        "external": 143,
+        "protocol": "tcp"
+      },
+      {
+        "port": 10995,
+        "external": 995,
+        "protocol": "tcp"
+      },
+      {
+        "port": 10993,
+        "external": 993,
+        "protocol": "tcp"
+      }
+    ],
+    "scripts": {
+      "start": {
+        "language": "sh",
+        "content": "#!/bin/sh\r\n\r\nPID_FILE=/var/run/dovecot/master.pid\r\nexport PID_FILE\r\n\r\nKILL_SCRIPT=/home/engines/scripts/signal/stop_dovecot.sh\r\nexport KILL_SCRIPT\r\n\r\n. /home/engines/functions/trap.sh\r\n\r\nservice_first_run_check\r\n\r\nsudo -n /usr/sbin/dovecot -F &\r\n\r\nstartup_complete\r\n\r\nwait\r\nexit_code=$?\r\n\r\nshutdown_complet"
+      },
+      "install": {
+        "language": "sh",
+        "content": "#!/bin/bash\r\n\r\nmkdir -p /var/mail &&\\\r\n\tchown dovecot /var/mail &&\\\r\n\tmkdir -p /var/run/dovecot &&\\\r\n\tchown -R dovecot /var/run/dovecot/ &&\\\r\n\tusermod -G containers -a dovecot &&\\\r\n \t/home/post_build_clean.sh"
+      }
+    },
+    "system_packages": [
+      {
+        "package": "dovecot-core"
+      },
+      {
+        "package": "dovecot-imapd"
+      },
+      {
+        "package": "dovecot-pop3d"
+      },
+      {
+        "package": "dovecot-sieve"
+      },
+      {
+        "package": "dovecot-lmtpd"
+      },
+      {
+        "package": "dovecot-gssap"
+      },
+      {
+        "package": "dovecot-ldap"
+      },
+      {
+        "package": "libpam-krb5"
+      }
+    ],
+    "service_configurations": [
+      {
+        "publisher_namespace": "EnginesSystem",
+        "type_path": "filesystem/local/filesystem",
+        "variables": {
+          "service_name": "imap_data",
+          "volume_src": "lib",
+          "engine_path": " /var/lib/dovecot",
+          "permissions": "rw",
+          "user": "",
+          "group": ""
+        }
+      },
+      {
+        "publisher_namespace": "EnginesSystem",
+        "type_path": "filesystem/local/filesystem",
+        "variables": {
+          "service_name": "mail_dir",
+          "volume_src": "mail",
+          "engine_path": " /var/mail",
+          "permissions": "rw",
+          "user": "",
+          "group": ""
+        }
+      }
+    ],
+    "constants": [
+      {
+        "name": "backup_support",
+        "value": "true"
+      }
+    ],
+    "actionators": [
+      {
+        "name": "list_mailboxes",
+        "label": "List mail boxes",
+        "return_type": "json"
+      }
+    ]
   }
 }
